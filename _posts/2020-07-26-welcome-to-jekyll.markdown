@@ -31,7 +31,7 @@ print("5 + 7 = {0}".format(add(5,7)))
 # outputs "5 + 7 = 12"
 {% endhighlight python %}
 
-**Okay how about an image?** Also does {{ page.slug }} work ?
+**Okay how about an image?** Also does `{{ page.slug }}` work ?
 
 {% include picture.html img="test" ext="webp" alt="This is a test image, webp format :)" %}
 
