@@ -6,14 +6,14 @@ categories: pwn 32bit
 ---
 These are my notes for a basic 32bit buffer overflow with shellcode. It is based on windows but a lot is transferrable to linux too. I am aware that this guide is by no means perfect, it is just my take on what a basic buffer overflow encompasses. I have linked some good writeups below that helped me on my way when learning this simple attack.
 
-[Nightmare][https://guyinatuxedo.github.io/index.html] is a great github repository, it is essentially a zero to hero guide in reverse engineering and binary exploitation.
-[DoStackBufferOverFlowGood][https://github.com/justinsteven/dostackbufferoverflowgood] is what inspried me to make this cheat sheet. Goes into much greater detail about the attack and how it works.
+[Nightmare][nightmare] is a great github repository, it is essentially a zero to hero guide in reverse engineering and binary exploitation.
+[DoStackBufferOverFlowGood][dostackbufferoverflowgood] is what inspried me to make this cheat sheet. Goes into much greater detail about the attack and how it works.
 
 This cheat sheet assumes that the binary doesn't have ASLR or NX enabled, meaning you can simply ret to a `jmp esp` instruction and execute shellcode from there.
 
 To keep it simple, the steps of this attack are as follows:
 
-1. [Fuzzing](#Fuzzing)
+1. [Fuzzing](#fuzzing)
 	- [Generating cyclic patterns](#generating-cyclic-patterns)
 	- [Finding the offset](#finding-the-offset)
 2. [Finding bad characters](#bad-characters) (commonly 0x00 and 0x0A)
@@ -232,3 +232,6 @@ run
 -------------------
 
 That's all, hope you found it useful :)
+
+[nightmare]:https://guyinatuxedo.github.io/index.html
+[dostackbufferoverflowgood]:https://github.com/justinsteven/dostackbufferoverflowgood
