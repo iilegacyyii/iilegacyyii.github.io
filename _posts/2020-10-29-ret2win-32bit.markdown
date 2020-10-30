@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Introduction to ROP - ret2win"
-date:   2020-09-27 20:41:00 +0100
+date:   2020-10-30 22:21:00 +0100
 categories: pwn 32bit
 ---
 [ret2win] is the first of many challenges from [ROP Emporium][rop-emporium]. It is intended to be the first baby step into ROP and is a great binary to start with as it is both simple to exploit whilst still incorporating the basic concepts of ROP. For now I will be focusing on the 32bit version of the binary but in future I will also add information for the 64bit binary.
@@ -10,25 +10,27 @@ categories: pwn 32bit
 The objective of the [ret2win] challenge is to call a so called *"magic method"* by overflowing the buffer and using this to gain control of the instruction pointer and pointing it to the "*magic method*". The *"magic method"* is a method called ret2win, this method calls system and simply cat's the flag file to us.
 
 ### Contents
-1. [Finding the buffer size][#finding-the-buffer-size]
-    - [Using gdb][#finding-buffer-size-with-gdb]
-    - [Using radare2][#finding-buffer-size-with-radare2]
-    - [Using ghidra][#finding-buffer-size-with-ghidra]
-    - [Using IDA][#finding-buffer-size-with-ida]
-2. [Gain control of the instruction pointer][#gain-control-of-the-instruction-pointer]
-    - [Creating a python script to overwrite the instruction pointer][#creating-a-python-script-to-overwrite-the-instruction-pointer]
-    - [Using gdb to check that our script works][#using-gdb-to-check-that-we-have-successfully-overwritten-the-instruction-pointer]
-3. [Calling the ret2win method][#calling-the-ret2win-method]
-    - [using gdb][#locating-the-ret2win-method-with-gdb]
-    - [using radare2][#locating-the-ret2win-method-with-radare2]
-    - [Using ghidra][#locating-the-ret2win-method-with-ghidra]
-    - [Using IDA][#locating-the-ret2win-method-with-ida]
-    - [Modifying our python script][#modifying-our-python-script]
-4. [Summary][#Summary]
+1. [Finding the buffer size](#finding-the-buffer-size)
+    - [Using gdb](#finding-buffer-size-with-gdb)
+    - [Using radare2](#finding-buffer-size-with-radare2)
+    - [Using ghidra](#finding-buffer-size-with-ghidra)
+    - [Using IDA](#finding-buffer-size-with-ida)
+2. [Gain control of the instruction pointer](#gain-control-of-the-instruction-pointer)
+    - [Creating a python script to overwrite the instruction pointer](#creating-a-python-script-to-overwrite-the-instruction-pointer)
+    - [Using gdb to check that our script works](#using-gdb-to-check-that-we-have-successfully-overwritten-the-instruction-pointer)
+3. [Calling the ret2win method](#calling-the-ret2win-method)
+    - [using gdb](#locating-the-ret2win-method-with-gdb)
+    - [using radare2](#locating-the-ret2win-method-with-radare2)
+    - [Using ghidra](#locating-the-ret2win-method-with-ghidra)
+    - [Using IDA](#locating-the-ret2win-method-with-ida)
+    - [Modifying our python script](#modifying-our-python-script)
+4. [Summary](#Summary)
 
 ## Finding the Buffer Size
 
-First of all, what is a buffer, and why is this important? A buffer is an array, in this instance it is a character array that is being used to store the user input. The buffer size is important to us because of how an array works; array's are a static data structure meaning they are given a size when they're created. For example, a buffer of size 60 can store 60 elements, in this case it would be 60 characters of user input.
+**First of all, what is a buffer, and why is its size so important?**
+
+A buffer is an array, in this instance it is a character array that is being used to store the user input. The buffer size is important to us because of how an array works; array's are a static data structure meaning they are given a size when they're created. For example, a buffer of size 60 can store 60 elements, in this case it would be 60 characters of user input.
 
 [ret2win]: https://ropemporium.com/challenge/ret2win.html
 [rop-emporium]: https://ropemporium.com/
