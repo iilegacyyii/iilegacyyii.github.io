@@ -82,7 +82,7 @@ To find the buffer size in [IDA][IDA-site], once IDA is loaded, click "disassemb
 
 ![image of the pwnme function disassembly in IDA](/assets/img/posts/intro-to-rop-ret2win/ida-disas-pwnme.webp)
 
-The most reliable is the 3rd line of disassembly, `sub exp, 28h` which if you look a little higher up, is equal to 0x28. This is the binary making room in memory (specifically on the stack) for our buffer, and thus the buffer can store 0x28 bytes, which is equal to 40 characters of user input.
+The most reliable is the 3rd line of disassembly, `sub esp, 28h` which if you look a little higher up, is equal to 0x28. This is the binary making room in memory (specifically on the stack) for our buffer, and thus the buffer can store 0x28 bytes, which is equal to 40 characters of user input.
 
 ## Gain Control of the Instruction Pointer
 
