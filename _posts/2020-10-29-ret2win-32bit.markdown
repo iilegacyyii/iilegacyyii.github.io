@@ -30,7 +30,7 @@ The objective of the [ret2win] challenge is to call a so called *"magic method"*
 
 **First of all, what is a buffer, and why is its size so important?**
 
-A buffer is an array, in this instance it is a character array that is being used to store the user input. The buffer size is important to us because of how an array works; array's are a static data structure meaning they are given a size when they're created. For example, a buffer of size 60 can store 60 elements, in this case it would be 60 characters of user input. If we write more characters of user input than the buffer can store, it will "overflow" onto the stack allowing us to control values of registers and redirect the program flow. Unfortunately for the men reading, size really does matter this time.
+A buffer is an array, in this instance it is a character array that is being used to store the user input. The buffer size is important to us because of how an array works; arrays are a static data structure meaning they are given a size when they're created which does not change. For example, a buffer of size 60 can store 60 elements, in this case it would be 60 characters of user input. If we write more characters of user input than the buffer can store, it will "overflow" onto the stack allowing us to control values of registers and redirect the program flow. Unfortunately for the men reading, size really does matter this time.
 
 pwnme is the function which takes our user input and stores it in the buffer. It is also where the buffer is created so disassembling it will show the size of the buffer.
 
