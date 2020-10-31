@@ -18,11 +18,11 @@ The objective of the [ret2win] challenge is to call a so called *"magic method"*
 2. [Gain control of the instruction pointer](#gain-control-of-the-instruction-pointer)
     - [Creating a python script to overwrite the instruction pointer](#creating-a-python-script-to-overwrite-the-instruction-pointer)
     - [Using gdb to check that our script works](#using-gdb-to-check-that-we-have-successfully-overwritten-the-instruction-pointer)
-3. [Calling the ret2win method](#calling-the-ret2win-method)
-    - [using gdb](#locating-the-ret2win-method-with-gdb)
-    - [using radare2](#locating-the-ret2win-method-with-radare2)
-    - [Using ghidra](#locating-the-ret2win-method-with-ghidra)
-    - [Using IDA](#locating-the-ret2win-method-with-ida)
+3. [Locating and Calling the ret2win Method](#locating-and-calling-the-ret2win-method)
+    - [Locating the method using gdb](#locating-the-ret2win-method-with-gdb)
+    - [Locating the method using radare2](#locating-the-ret2win-method-with-radare2)
+    - [Locating the method Using ghidra](#locating-the-ret2win-method-with-ghidra)
+    - [Locating the method Using IDA](#locating-the-ret2win-method-with-ida)
     - [Modifying our python script](#modifying-our-python-script)
 4. [Summary](#Summary)
 
@@ -30,8 +30,74 @@ The objective of the [ret2win] challenge is to call a so called *"magic method"*
 
 **First of all, what is a buffer, and why is its size so important?**
 
-A buffer is an array, in this instance it is a character array that is being used to store the user input. The buffer size is important to us because of how an array works; array's are a static data structure meaning they are given a size when they're created. For example, a buffer of size 60 can store 60 elements, in this case it would be 60 characters of user input. If we write more characters of user input than the buffer can store, it will "overflow" onto the stack allowing us to control values of registers and redirect the program flow. 
+A buffer is an array, in this instance it is a character array that is being used to store the user input. The buffer size is important to us because of how an array works; array's are a static data structure meaning they are given a size when they're created. For example, a buffer of size 60 can store 60 elements, in this case it would be 60 characters of user input. If we write more characters of user input than the buffer can store, it will "overflow" onto the stack allowing us to control values of registers and redirect the program flow. Unfortunately for the men reading, size really does matter this time.
+
+pwnme is the function which takes our user input and stores it in the buffer. It is also where the buffer is created so disassembling it will show the size of the buffer.
+
+#### Finding Buffer Size with GDB
+
+To find the buffer size in [gdb][gdb-site], you first open the [binary][ret2win32] inside gdb as usual using `gdb ret2win32` (`gdb ret2win` if you're exploiting the 64bit version). Then enter the command `disassemble pwnme`. This will disassemble the pwnme method and display its assembly. We can then use this to figure out the size of the buffer.
+
+*Note: if your assembly seems to be a different syntax, type the command `set disassembly-flavor intel` into gdb and try again*
+
+![image of disassembly of the pwnme method inside gdb](/assets/img/posts/intro-to-rop-ret2win/gdb-disas-pwnme.webp)
+
+The addresses of where the instructions are stored in memory are shown in the left column. There are three instructions that give away the size of the buffer, and these are the instructions located at `0x080485ba` through to and including `0x080485be`. the `lea` instruction calculates address of the second opcode and moves that address into the first opcode. In this instance, it moves the address `ebp-0x28` into `eax`. The next instruction `push eax` then pushes the address onto the stack, and the final instruction `call 0x8048410`, is a call to memset.
+
+This is a giveaway due to how the stack works. When you push something onto the stack, it grows downwards meaning if you pushed a variable onto the stack and the top of your stack is currently at `0x08000002`, the variable would be located at `0x08000003`. In this binary, we are subtracting 0x28 from the stack base pointer (ebp) and copying it to eax. This value is then pushed onto the stack and memset is called. This is very typical when an array is initialized in C and can be used to find the size of the array. The first command `lea eax, [ebp-0x28]` shows that the buffer has a size of 0x28, meaning it can store 0x28 characters, which is equal to 40 in decimal.
+
+[Step 2 -> Gaining control of the instruction pointer](#gain-control-of-the-instruction-pointer)
+
+#### Finding Buffer Size with Radare2
+
+To find the buffer size in [radare2][r2-site], you open the [binary][ret2win32] inside radare2 as usual using `radare2 ret2win32` (`radare2 ret2win` if exploiting the 64bit version). You then run the `aa` command, analysing all symbols beginning with sym and entry0. If you run `afl` you will get a list of all functions.
+
+![radare2 showing all functions inside the binary](/assets/img/posts/intro-to-rop-ret2win/r2-list-functions.webp)
+
+Following from this, we can see the our vulnerable pwnme method listed as `sym.pwnme`. Next, enter the command `s sym.pwnme` to seek to that funtion (aka jump to its start point). Then enter the command `pdf`. The pdf command shows the function disassembly, allowing us to work out the buffer size just like we did in gdb.
+
+![image of disassembly of the pwnme method inside radare2](/assets/img/posts/intro-to-rop-ret2win/r2-disas-pwnme.webp)
+
+Instead of looking at the same 3 instructions we used in gdb, this time let's look for another instruction that show's the size of the buffer. This time, look at the instructions right at the top of the assembly, `mov ebp, esp` and `sub esp, 0x28` is our giveaway. These are located at addresses `0x080485ae` and `0x080485b0` respectively. These are again a giveaway as to how large the buffer is because of how the stack works.
+
+Due to the stack growing downwards, this means that when you initialize a variable (which compilers like doing at the beginning of functions), the address it's stored at will be less than the current "top" of the stack. Subtracting 0x28 from the stack base pointer means we are growing the stack by 0x28 (equal to 40) bytes and therefore we can safely assume that this is the binary making room in memory for our buffer to be initialized.
+
+[Step 2 -> Gaining control of the instruction pointer](#gain-control-of-the-instruction-pointer)
+
+#### Finding Buffer Size with Ghidra
+
+To find the buffer size in [ghidra][ghidra-site], first open ghidra and if you haven't done so already, create a ghidra project. What you call it or where you store it isn't all that important however if you want to delve deeper into more complex reverse engineering later on, these project files will become a lifesaver. Once your project is loaded or created, press `i` on the keyboard to import the [binary][ret2win32]. Once imported, double click the binary to open it. The analysis options window should open up, press "restore defaults" and then analyze.
+
+Once the binary has been analyzed, take a look at the "symbol tree" section of the GUI in the bottom left. Expand the functions section and double click on the `pwnme` function. The disassembly for this function should appear in the centre window and the right window should have some pseudo-decompiled C code. Whilst we could look through the disassembly like we did previously in gdb or radare2, gdb's most powerful feature in my opinion is its decompiler.
+
+![image of the pwnme function decompiled in ghidra](/assets/img/posts/intro-to-rop-ret2win/ghidra-decomp-pwnme.webp)
+
+Look at line 5 of the decompiled pwnme function. `undefined target_buff [40];`. This is the buffer! It clearly has a size of 40 and this is why I personally love ghidra for reverse engineering as it's decompiler is very powerful and easy to read.
+
+[Step 2 -> Gaining control of the instruction pointer](#gain-control-of-the-instruction-pointer)
+
+#### Finding Buffer Size with IDA
+
+To find the buffer size in [IDA][IDA-site], once IDA is loaded, click "disassemble new file" and open up the [binary][ret2win32]. Leave all the settings on default and press "okay". Once loaded you may have some error windows pop up, ignore them and continue. There will be a functions window on the left and as before, double click on the `pwnme` function. You can use either of the previous methods of checking the size of the buffer.
+
+![image of the pwnme function disassembly in IDA](/assets/img/posts/intro-to-rop-ret2win/ida-disas-pwnme.webp)
+
+The most reliable is the 3rd line of disassembly, `sub exp, 28h` which if you look a little higher up, is equal to 0x28. This is the binary making room in memory (specifically on the stack) for our buffer, and thus the buffer can store 0x28 bytes, which is equal to 40 characters of user input.
+
+## Gain Control of the Instruction Pointer
+
+**Why would I want to control the instruction pointer?**
+
+Being able to control of the instruction pointer is what allows us to redirect the program flow to wherever we please. This is because the instruction pointer points to the next instruction to be executed by the CPU and therefore if we can change the value stored in this register, we can pick and choose the next instruction to be executed. This is where the whole technique of ROP (Return-Orientated Programming) came from; whenever the CPU executes a return command, it's really executing a `jmp eip` or `jmp rip` depending on whether the binary is 32bit or 64bit respectively. This technique is used to bypass certain protections such as "NX" a.k.a, Non-Executable Stack. This means we can't simply place our own assembly on the stack and have it be executed, we have to reuse code that is already inside of the binary to achieve our goal.
+
+#### Creating a Python Script to Overwrite the Instruction Pointer
+
 
 
 [ret2win]: https://ropemporium.com/challenge/ret2win.html
 [rop-emporium]: https://ropemporium.com/
+[gdb-site]: https://www.gnu.org/software/gdb/index.html
+[r2-site]: https://rada.re/
+[ret2win32]: https://ropemporium.com/binary/ret2win32.zip
+[ghidra-site]: https://ghidra-sre.org/
+[IDA-site]: https://www.hex-rays.com/products/
