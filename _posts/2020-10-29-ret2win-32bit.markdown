@@ -141,7 +141,7 @@ We can use this to our advantage as we now have control of the instruction point
 
 First of all, open up the [binary][ret2win32] inside of gdb as usual by running the command `gdb ./ret2win32`. Then run the binary by typing `r`. Once running the binary should pause and wait for user input, press `Ctrl + C` to enter debug mode. Then type `disassemble ret2win`. This will show the disassembly of the ret2win function and the address of the first instruction inside of the function is considered to be the address of the function. In this case, as shown below, it is `0x0804862c`. Write this down as it will come in handy later when finishing our script.
 
-[image of disassembled ret2win function inside of gdb](/assets/img/posts/intro-to-rop-ret2win/gdb-disas-ret2win.webp)
+![image of disassembled ret2win function inside of gdb](/assets/img/posts/intro-to-rop-ret2win/gdb-disas-ret2win.webp)
 
 [Step 4 -> Modifying our Python Script](#modifying-our-python-script)
 
@@ -149,7 +149,7 @@ First of all, open up the [binary][ret2win32] inside of gdb as usual by running 
 
 First of all, open up the [binary][ret2win32] inside of radare2 like you did previously by running `radare2 ./ret2win32`. Then analyse all symbols by running the `aa` command. Once done run `afl` and you should get a list of all functions, one of which should be `sym.ret2win`. Type `s sym.ret2win` to seek to that funtion (aka jump to its start point). Then enter the command `pdf`. This will output the disassemblyt of the ret2win function. The address of the first instruction inside the function is considered to be the location of that function, so that is what we're looking out for.
 
-[image of disassembly of the ret2win function using radare2](/assets/img/posts/intro-to-rop-ret2win/r2-disas-ret2win.webp)
+![image of disassembly of the ret2win function using radare2](/assets/img/posts/intro-to-rop-ret2win/r2-disas-ret2win.webp)
 
 As clearly shown, the address of the ret2win function is `0x0804862c`. Write this down as it will come in handy later when finishing our script.
 
@@ -159,7 +159,7 @@ As clearly shown, the address of the ret2win function is `0x0804862c`. Write thi
 
 First of all, open up the [binary][ret2win32] just like you did previously, if ghidra tries to analyse the binary again that's fine, just press restore defaults and "analyze". Once ghidra has finished analysing the binary, look at the bottom left section of the GUI, there should be a small window called "Symbol Tree". Expand the functions section and double click on "ret2win". This should open up the disassembly of the ret2win function in the middle of the GUI and the decompilation of it on the right.
 
-[image of disassembly of the ret2win function using ghidra](/assets/img/posts/intro-to-rop-ret2win/ghidra-disas-ret2win.webp)
+![image of disassembly of the ret2win function using ghidra](/assets/img/posts/intro-to-rop-ret2win/ghidra-disas-ret2win.webp)
 
 Looking at the first instruction in the ret2win function, we can see that its address is `0x0804862c`, the address of the first instruction inside of the function is considered to be the address of the function. Write this down as it will come in handy later when finishing our script.
 
@@ -169,7 +169,7 @@ Looking at the first instruction in the ret2win function, we can see that its ad
 
 Start by loading the [binary][ret2win32] inside of IDA just like you did previously. If you get a few error pop ups whilst loading the binary, that's completely fine just click the "okay" button and continue. Once loaded, there will be a section on the left side of the GUI called the "Functions Window". Look for the ret2win function and double click it, once open it should look something like this, and display the address of the first instruction inside the function at the bottom of the window. This is considered the be the address of the function and in this case it is `0x0804862c`. Write this down as it will come in handy later when finishing our script.
 
-[image of disassembly of the ret2win function using IDA](/assets/img/posts/intro-to-rop-ret2win/ida-disas-ret2win.webp)
+![image of disassembly of the ret2win function using IDA](/assets/img/posts/intro-to-rop-ret2win/ida-disas-ret2win.webp)
 
 [Step 4 -> Modifying our Python Script](#modifying-our-python-script)
 
