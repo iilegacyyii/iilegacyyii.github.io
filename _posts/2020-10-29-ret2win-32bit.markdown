@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Introduction to ROP - ret2win"
-date:   2020-10-30 22:21:00 +0100
+date:   2020-11-01 01:43:00 +0000
 categories: pwn 32bit
 ---
 [ret2win] is the first of many challenges from [ROP Emporium][rop-emporium]. It is intended to be the first baby step into ROP and is a great binary to start with as it is both simple to exploit whilst still incorporating the basic concepts of ROP. For now I will be focusing on the 32bit version of the binary but in future I will also add information for the 64bit binary.
@@ -23,8 +23,8 @@ The objective of the [ret2win] challenge is to call a so called *"magic method"*
     - [Locating the method using radare2](#locating-the-ret2win-method-with-radare2)
     - [Locating the method Using ghidra](#locating-the-ret2win-method-with-ghidra)
     - [Locating the method Using IDA](#locating-the-ret2win-method-with-ida)
-    - [Modifying our python script](#modifying-our-python-script)
-4. [Summary](#Summary)
+4. [Modifying our python script](#modifying-our-python-script)
+5. [Final Summary](#final-summary)
 
 ## Finding the Buffer Size
 
@@ -98,7 +98,7 @@ Whilst it is possible to use pwntools for this binary, I feel it is a little ove
 
 This script will be as basic as they come in terms of binary exploitation. It will simply be us creating a string, and printing it. We will then pipe that output into the [binary][ret2win32] and hopefully get our flag printed out to us.
 
-Below is the python3 code to overwrite the eip. I am aware that this is doable in just one or two lines of code however this is much more readable and easier to work with later on.
+Below is the python code to overwrite the eip. I am aware that this is doable in just one or two lines of code however this is much more readable and easier to work with later on. It is important to mention that python2 is much preferred here; we are doing it manually and python3 prints byte strings much different to python2.
 
 ```py
 payload = b""
@@ -121,7 +121,88 @@ The last line (`print(payload)`) prints the payload to the screen, this allows u
 
 #### Using GDB to Check That Our Script Works
 
-content
+To check that our script works, we first need to write our script output to a file. We can do this by redirecting our python script output into a file. Let's call this file `exp.bin`. To do this run the command `python ./exploit.py > exp.bin`.
+
+Now to test our exploit. Open up the [binary][ret2win32] in gdb by running `gdb ./ret2win32`. Once open, enter the command `r < exp.bin`. This will run the script with the contents of `exp.bin` as the user input. The binary should crash, and if we run the command `x $eip$` we should see that the eip register (the instruction pointer), should be equal to `0x43434343` which is hexadecimal for our 4 C's.
+
+![image of eip being overwritten with 4 C's in gdb](/assets/img/posts/intro-to-rop-ret2win/gdb-check-eip-4c.webp)
+
+As you can see, eip is equal to `0x43434343`. The [binary][ret2win32] crashed because it was unable to locate the instruction at `0x43434343`. All we need to do now is locate the address of the ret2win function set eip to equal that address and we're done!
+
+## Locating and Calling the ret2win Method
+
+**How will locating the method allow us to call it?**
+
+As you may have noticed previously when disassembling the pwnme function, every instruction inside of the binary has a 4 byte hexadecimal value next to it, this value is called an address. Due to the lack of a certain type of protection called Address Space Layour Randomisation (ASLR) on this binary, the addresses of instructions and almost all functions (except some that have been imported), will be constant.
+
+We can use this to our advantage as we now have control of the instruction pointer. This allows us to choose the next instruction in the binary to be executed once a return instruction is executed by the CPU. If we write the address of the ret2win function inside of eip, it will get executed after the vulnerable pwnme function.
+
+#### Locating the ret2win Method With GDB
+
+First of all, open up the [binary][ret2win32] inside of gdb as usual by running the command `gdb ./ret2win32`. Then run the binary by typing `r`. Once running the binary should pause and wait for user input, press `Ctrl + C` to enter debug mode. Then type `disassemble ret2win`. This will show the disassembly of the ret2win function and the address of the first instruction inside of the function is considered to be the address of the function. In this case, as shown below, it is `0x0804862c`. Write this down as it will come in handy later when finishing our script.
+
+[image of disassembled ret2win function inside of gdb](/assets/img/posts/intro-to-rop-ret2win/gdb-disas-ret2win.webp)
+
+[Step 4 -> Modifying our Python Script](#modifying-our-python-script)
+
+#### Locating the ret2win Method With Radare2
+
+First of all, open up the [binary][ret2win32] inside of radare2 like you did previously by running `radare2 ./ret2win32`. Then analyse all symbols by running the `aa` command. Once done run `afl` and you should get a list of all functions, one of which should be `sym.ret2win`. Type `s sym.ret2win` to seek to that funtion (aka jump to its start point). Then enter the command `pdf`. This will output the disassemblyt of the ret2win function. The address of the first instruction inside the function is considered to be the location of that function, so that is what we're looking out for.
+
+[image of disassembly of the ret2win function using radare2](/assets/img/posts/intro-to-rop-ret2win/r2-disas-ret2win.webp)
+
+As clearly shown, the address of the ret2win function is `0x0804862c`. Write this down as it will come in handy later when finishing our script.
+
+[Step 4 -> Modifying our Python Script](#modifying-our-python-script)
+
+#### Locating the ret2win Method With Ghidra
+
+First of all, open up the [binary][ret2win32] just like you did previously, if ghidra tries to analyse the binary again that's fine, just press restore defaults and "analyze". Once ghidra has finished analysing the binary, look at the bottom left section of the GUI, there should be a small window called "Symbol Tree". Expand the functions section and double click on "ret2win". This should open up the disassembly of the ret2win function in the middle of the GUI and the decompilation of it on the right.
+
+[image of disassembly of the ret2win function using ghidra](/assets/img/posts/intro-to-rop-ret2win/ghidra-disas-ret2win.webp)
+
+Looking at the first instruction in the ret2win function, we can see that its address is `0x0804862c`, the address of the first instruction inside of the function is considered to be the address of the function. Write this down as it will come in handy later when finishing our script.
+
+[Step 4 -> Modifying our Python Script](#modifying-our-python-script)
+
+#### Locating the ret2win Method With IDA
+
+Start by loading the [binary][ret2win32] inside of IDA just like you did previously. If you get a few error pop ups whilst loading the binary, that's completely fine just click the "okay" button and continue. Once loaded, there will be a section on the left side of the GUI called the "Functions Window". Look for the ret2win function and double click it, once open it should look something like this, and display the address of the first instruction inside the function at the bottom of the window. This is considered the be the address of the function and in this case it is `0x0804862c`. Write this down as it will come in handy later when finishing our script.
+
+[image of disassembly of the ret2win function using IDA](/assets/img/posts/intro-to-rop-ret2win/ida-disas-ret2win.webp)
+
+[Step 4 -> Modifying our Python Script](#modifying-our-python-script)
+
+## Modifying our Python Script
+
+Now that we have the location of the instruction we want to jump to (`0x0804862c`). We can simply use our script to set the value of eip to that address.
+
+However, rather than just copy paste our address into the script, we need to convert it to [Little Endian][little-endian] first. [Little Endian][little-endian] is a byte order in which both the 64bit and 32bit CPU stores and reads bytes. The bytes are stored with the least significant (lowest) byte first, and the most significant byte last. This essentially means that we will have to reverse the bytes of our address and then insert them into our script. We can do this either manually, which is very prone to human error due to the nature of how it is done, or we can simply use the inbuilt python struct library to convert our bytes to [Little Endian][little-endian] for us. This makes our script now look like this.
+
+```py
+import struct
+
+payload = b""
+payload += b"A" * 40                            # Fill the buffer
+payload += b"B" * 4                             # Overwrite the base pointer (ebp)
+payload += struct.pack("<I", 0x0804862c)        # Instruction pointer (eip)
+
+print(payload)
+```
+
+There have been 2 changes made here, the first is that the struct module has been imported, this will allow us to convert our hexadecimal address into [Little Endian][little-endian]. The second is the last line of the payload (`payload += struct.pack("<I", 0x0804862c)`). The function pack from the struct module packs a set of bytes into a given formatting, in this case, [Little Endian][little-endian].
+
+All we need to do now is save our script and run `python ./exploit.py | ./ret2win32`. This command runs our python exploit script, and pipes the output to the binary, giving it as our user input. We get the following output.
+
+[image of running exploit script and piping the ouput into the ret2win32 binary and exploits successfully](/assets/img/posts/intro-to-rop-ret2win/python-script-success.webp)
+
+Success! The flag gets printed to us as expected!
+
+## Final Summary
+
+From reading this post you will have learnt to perform your first successful ROP based attack, gained knowledge of the basics of the key registers as well as a very simplified understanding of how the stack works. The tools and techniques shown here can be used and applied to almost every ROP based exploit you do and are essential skills to have if you want to progress further into binary exploitation.
+
+That's all, hope you learnt something and good luck!
 
 [ret2win]: https://ropemporium.com/challenge/ret2win.html
 [rop-emporium]: https://ropemporium.com/
@@ -130,3 +211,4 @@ content
 [ret2win32]: https://ropemporium.com/binary/ret2win32.zip
 [ghidra-site]: https://ghidra-sre.org/
 [IDA-site]: https://www.hex-rays.com/products/
+[little-endian]: https://chortle.ccsu.edu/AssemblyTutorial/Chapter-15/ass15_3.html
