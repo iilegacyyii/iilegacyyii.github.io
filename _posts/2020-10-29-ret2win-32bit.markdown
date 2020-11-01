@@ -92,7 +92,36 @@ Being able to control of the instruction pointer is what allows us to redirect t
 
 #### Creating a Python Script to Overwrite the Instruction Pointer
 
+Whilst it is possible to use pwntools for this binary, I feel it is a little overkill as pwntools is more helpful for automation and being able to create exploits and rop chains manually is a very important skill, especially when it comes to debugging your exploit further down the line.
 
+**So, what is this script going to do exactly?**
+
+This script will be as basic as they come in terms of binary exploitation. It will simply be us creating a string, and printing it. We will then pipe that output into the [binary][ret2win32] and hopefully get our flag printed out to us.
+
+Below is the python3 code to overwrite the eip. I am aware that this is doable in just one or two lines of code however this is much more readable and easier to work with later on.
+
+```py
+payload = b""
+payload += b"A" * 40        # Fill the buffer
+payload += b"B" * 4         # Overwrite the base pointer (ebp)
+payload += b"C" * 4         # Instruction pointer (eip)
+
+print(payload)
+```
+
+The first line of the code above (`buf = b""`) is creating our byte string (payload), python does not like concatenating (joining) strings and bytes and later on we will be adding some bytes to our payload.
+
+The second line (`buf += b"A" * 40`) adds 40 'A' bytes to our payload byte string. This fills our user input buffer, meaning that anything we write after this will be written directly onto the stack.
+
+The third line (`payload += b"B" * 4`) is our first register overwrite, the base pointer; the base pointer points to the bottom of the stack frame. In this instance it really doesn't matter what we chance it to as it isn't accessed before the rest of our payload will be executed and if the program crashes afterward it doesn't matter since we will have already achieved our goal. However, our goal here is to overwrite the instruction pointer, which comes next on the stack. This line along with the second line is known commonly as "padding". It's a bunch of junk bytes you send to the program that allows you to overwrite the values you want.
+
+The fourth line (`payload += b"C" * 4`) is our instruction pointer overwrite. As we don't know the location of the ret2win function inside of the binary yet, we will fill the instruction pointer with 4 C's for now. This will allow us to confirm that we have successfully overwritten the instruction pointer later on as well as easily edit this script to add the location of the function to make our call to it once we have located it.
+
+The last line (`print(payload)`) prints the payload to the screen, this allows us to pipe that output directly into the binary when we call the script as well as use it for testing purposes.
+
+#### Using GDB to Check That Our Script Works
+
+content
 
 [ret2win]: https://ropemporium.com/challenge/ret2win.html
 [rop-emporium]: https://ropemporium.com/
