@@ -194,7 +194,7 @@ There have been 2 changes made here, the first is that the struct module has bee
 
 All we need to do now is save our script and run `python ./exploit.py | ./ret2win32`. This command runs our python exploit script, and pipes the output to the binary, giving it as our user input. We get the following output.
 
-[image of running exploit script and piping the ouput into the ret2win32 binary and exploits successfully](/assets/img/posts/intro-to-rop-ret2win/python-script-success.webp)
+![image of running exploit script and piping the ouput into the ret2win32 binary and exploits successfully](/assets/img/posts/intro-to-rop-ret2win/python-script-success.webp)
 
 Success! The flag gets printed to us as expected!
 
