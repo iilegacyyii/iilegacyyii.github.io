@@ -63,8 +63,11 @@ In order to call `OpenProcess` successfully, your current process must possess t
 
 In addition to this, all processes also have an integrity level that restricts access to them. This works by blocking access from one process to another that has a higher integrity level, however accessing a process with a lower or equal integrity level is generally possible.
 
-A great example of this is when trying to inject into a process such as `notepad.exe`. If you were to run notepad as a normal user you would see that the process runs at a medium integrity level (normal for most processes), and thus you should be able to inject into it. However, if you were to run `notepad.exe` as an administrator, it would run as a high integrity level process and thus unless you have attained administrator / system privileges prior to injection, it will not be possible.
+A great example of this is when trying to inject into a process such as notepad.exe. If you were to run notepad as a normal user you would see that the process runs at a medium integrity level (normal for most processes), and thus you should be able to inject into it. However, if you were to run notepad.exe as an administrator, it would run as a high integrity level process and thus unless you have attained administrator / system privileges prior to injection, it will not be possible.
 
 #### Selecting a Target
 
+An easy target to prove a concept is usually notepad.exe or calc.exe, so that is what the code examples in this blog post will focus on. However on a real engagement I would recommend looking for applications that the user commonly uses (such as microsoft teams etc.) that are not stored in `C:\Windows\system32` and are usually seen making network traffic, this way they will seem less suspicious when they start generating network traffic.
+
+## Writing a Process Injection POC
 
