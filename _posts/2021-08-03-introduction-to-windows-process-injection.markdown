@@ -28,7 +28,8 @@ Process injection can also help your implant blend in to a victim's environment.
 
 ## Fundamental Theory
 
-#### 
+#### Processes Threads and Win32 API
+
 According to [this piece of Microsoft documentation](https://docs.microsoft.com/en-us/windows/win32/procthread/about-processes-and-threads), the definition to a process on windows is as follows:
 
 *"A process has a virtual address space, executable code, open handles to system objects, a security context, a unique process identifier, environment variables, a priority class, minimum and maximum working set sizes, and at least one thread of execution. Each process is started with a single thread, often called the primary thread, but can create additional threads from any of its threads."* ~ [Microsoft](https://docs.microsoft.com/en-us/windows/win32/procthread/about-processes-and-threads)
