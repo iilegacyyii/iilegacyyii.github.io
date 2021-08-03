@@ -14,6 +14,7 @@ So, what is process injection? I personally believe the folk at MITRE have the p
 2. [Fundamental Theory](#fundamental-theory)
     - [Processes Threads and Win32 API](#processes-threads-and-win32-api)
     - [OpenProcess API](#openprocess-api)
+    - [Selecting a Target](#selecting-a-target)
 3. [Writing a Process Injection POC](#process-injection-in-c#)
 4. [Summary](#summary)
 
@@ -41,7 +42,7 @@ As previously mentioned, each process has its own seperate virtual address space
 
 #### OpenProcess API
 
-**What does it do?**
+**What does it do and how do I use it?**
 
 The [`OpenProcess` API](https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-openprocess) opens an existing local process object for interaction and returns a process handle to the user. A total of three parameters are required when being called, and are as follows.
 
@@ -56,3 +57,12 @@ The [`OpenProcess` API](https://docs.microsoft.com/en-us/windows/win32/api/proce
     - If this specified process is the `System Idle` process (0x0), the API call will fail with an error code `ERROR_INVALID_PARAMETER`.
     - If the specified process is the `System` process or one of the `Client Server Run-Time Subsystem` (CSRSS) processes, this call again will fail with the error code `ERROR_ACCESS_DENIED` because their access restrictions prevent user-level code from opening them.
 
+**What processes is it possible to inject in to?**
+
+In order to call `OpenProcess` successfully, your current process must possess the appropriate security descriptor. Every process has a Security Descriptor that specifies the file permissions of the executable and access rights of a user or group which originates from the creator of said process. This aims to block privilege escalation.
+
+In addition to this, all processes also have an integrity level that restricts access to them. This works by blocking access from one process to another that has a higher integrity level, however accessing a process with a lower or equal integrity level is generally possible.
+
+A great example of this is when trying to inject into a process such as `notepad.exe`. If you were to run notepad as a normal user you would see that the process runs at a medium integrity level (normal for most processes), and thus you should be able to inject into it. However, if you were to run `notepad.exe` as an administrator, it would run as a high integrity level process and thus unless you have attained administrator / system privileges prior to injection, it will not be possible.
+
+#### Selecing a Target
