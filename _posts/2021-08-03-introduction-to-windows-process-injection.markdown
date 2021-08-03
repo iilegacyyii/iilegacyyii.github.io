@@ -65,4 +65,6 @@ In addition to this, all processes also have an integrity level that restricts a
 
 A great example of this is when trying to inject into a process such as `notepad.exe`. If you were to run notepad as a normal user you would see that the process runs at a medium integrity level (normal for most processes), and thus you should be able to inject into it. However, if you were to run `notepad.exe` as an administrator, it would run as a high integrity level process and thus unless you have attained administrator / system privileges prior to injection, it will not be possible.
 
-#### Selecing a Target
+#### Selecting a Target
+
+
