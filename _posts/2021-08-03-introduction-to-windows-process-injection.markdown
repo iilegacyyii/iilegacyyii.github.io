@@ -65,6 +65,20 @@ In addition to this, all processes also have an integrity level that restricts a
 
 A great example of this is when trying to inject into a process such as notepad.exe. If you were to run notepad as a normal user you would see that the process runs at a medium integrity level (normal for most processes), and thus you should be able to inject into it. However, if you were to run notepad.exe as an administrator, it would run as a high integrity level process and thus unless you have attained administrator / system privileges prior to injection, it will not be possible.
 
+#### VirtualAllocEx WriteProcessMemory and CreateRemoteThread APIs
+
+**The VirtualAllocEx API**
+
+The [`VirtualAllocEx` API](https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualallocex) reserves, commits, or changes the state of a region of memory within the virtual address space of a specified process. The call initialises the memory it allocates to zero. A total of 5 parameters are required when being called. More details can be found [here](https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualallocex)
+
+**The WriteProcessMemory API**
+
+The [`WriteProcessMemory` API](https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-writeprocessmemory) writes data to an area of memory in a specified process. The entire area to be written to must be readable/writeable or the operation fails. A total of 5 parameters are required when being called. More details can be found [here](https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-writeprocessmemory)
+
+**The CreateRemoteThread API**
+
+The [`CreateRemoteThread` API](https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createremotethread) creates a thread that runs in the virtual address space of another process. Use the API to create a thread that runs in the virtual address space of another process and optionally specify extended attributes. More details can be found [here](https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createremotethread)
+
 #### Selecting a Target
 
 An easy target to prove a concept is usually notepad.exe or calc.exe, so that is what the code examples in this blog post will focus on. However on a real engagement I would recommend looking for applications that the user commonly uses (such as microsoft teams etc.) that are not stored in `C:\Windows\system32` and are usually seen making network traffic, this way they will seem less suspicious when they start generating network traffic.
