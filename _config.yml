@@ -21,7 +21,7 @@
 title: Legacyy
 #email: your-email@example.com
 description: >- # this means to ignore newlines until "baseurl:"
-  Red Team Operator @JUMPSEC and lover of all things Defense Evasion. 🦐 "It's shrimple" 🦐
+  Red Team Operator and lover of all things Defense Evasion. 🦐 "It's shrimple" 🦐
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "http://legacyy.xyz" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: 0xLegacyy
