@@ -467,7 +467,7 @@ This gives an average of `285.604` iterations/s over the course of `11100` itera
 | 1000       | 36.228               | 27.602959    |
 | 10000      | 328.949              | 30.399849    |
 
-This gives an average of `30.114` iterations/s over the course of `11100` iterations, in the case of which there are no crashes. As you can see, this is approximately `9.5` times slower than fuzzing without crashes, and shows a good worst case in terms of performance defecit.
+This gives an average of `30.114` iterations/s over the course of `11100` iterations, in the case of which there are crashes. As you can see, this is approximately `9.5` times slower than fuzzing without crashes, and shows a good worst case in terms of performance defecit.
 
 # Conclusion
 
