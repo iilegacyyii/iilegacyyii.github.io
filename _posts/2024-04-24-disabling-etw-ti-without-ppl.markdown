@@ -30,6 +30,7 @@ In order to exploit this bug, you require either `SeDebug` or `SeTcb` privileges
 | Write virtual memory operation           | N/A                   | Vulnerable            | Vulnerable            | Patched               |
 | Process suspension / resuming operations | N/A                   | N/A                   | Vulnerable            | Patched               |
 | Thread suspension / resuming operations  | N/A                   | N/A                   | Vulnerable            | Patched               |
+
 Thanks to RiskInsight for this table: [Source](https://www.riskinsight-wavestone.com/en/2023/10/a-universal-edr-bypass-built-in-windows-10/)
 
 # The Bug
