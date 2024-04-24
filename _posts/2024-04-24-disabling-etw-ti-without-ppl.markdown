@@ -24,7 +24,7 @@ As RiskInsight already explained this in detail, I will not be explaining backgr
 
 In order to exploit this bug, you require either `SeDebug` or `SeTcb` privileges to be enabled, and be on one of the following vulnerable Windows versions: 
 
-|                                          | Win10<br>1507 -> 1703 | Win10<br>1709 -> 1803 | Win10<br>1809 -> 22H2 | Win11<br>21H2 -> 22H2 |
+|                                          | Win10 1507 -> 1703 | Win10 1709 -> 1803 | Win10 1809 -> 22H2 | Win11 21H2 -> 22H2 |
 | ---------------------------------------- | --------------------- | --------------------- | --------------------- | --------------------- |
 | Read virtual memory operation            | N/A                   | Vulnerable            | Vulnerable            | Patched               |
 | Write virtual memory operation           | N/A                   | Vulnerable            | Vulnerable            | Patched               |
