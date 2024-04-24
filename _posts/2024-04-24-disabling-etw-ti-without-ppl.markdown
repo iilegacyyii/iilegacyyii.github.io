@@ -24,7 +24,7 @@ As RiskInsight already explained this in detail, I will not be explaining backgr
 
 In order to exploit this bug, you require either `SeDebug` or `SeTcb` privileges to be enabled, and be on one of the following vulnerable Windows versions: 
 
-|                                          | Win10 1507 -> 1703 | Win10 1709 -> 1803 | Win10 1809 -> 22H2 | Win11 21H2 -> 22H2 |
+| .                                        |   Win10 1507 -> 1703  |   Win10 1709 -> 1803  |   Win10 1809 -> 22H2  |   Win11 21H2 -> 22H2  |
 | ---------------------------------------- | --------------------- | --------------------- | --------------------- | --------------------- |
 | Read virtual memory operation            | N/A                   | Vulnerable            | Vulnerable            | Patched               |
 | Write virtual memory operation           | N/A                   | Vulnerable            | Vulnerable            | Patched               |
@@ -36,7 +36,7 @@ Thanks to RiskInsight for this table: [Source](https://www.riskinsight-wavestone
 
 As ETW-TI can raise a large number of events, it is enabled on a per-process basis. To do so, you make a call to `NtSetInformationProcess`, specifying either `ProcessEnableReadWriteVmLogging` or  `ProcessEnableLogging` as the `ProcessInformationClass`.
 
-The intention is that alongside the permissions mentioned prior, in order to disable process should be a protected process `PROTECTED_ANTIMALWARE_LIGHT`, and thus signed by Microsoft. However, this check is missing on the aforementioned windows versions, and so only the token permission checks are in place. Again, RiskInsight went into a lot of detail about this, and so if you want to find out more, feel free to give [their post](https://www.riskinsight-wavestone.com/en/2023/10/a-universal-edr-bypass-built-in-windows-10/) a read.
+The intention is that alongside the permissions mentioned prior, in order to disable ETW-TI event logging, the process should be a protected process `PROTECTED_ANTIMALWARE_LIGHT`, and thus signed by Microsoft. However, this check is missing on the aforementioned windows versions, and so only the token permission checks are in place. Again, RiskInsight went into a lot of detail about this, and so if you want to find out more, feel free to give [their post](https://www.riskinsight-wavestone.com/en/2023/10/a-universal-edr-bypass-built-in-windows-10/) a read.
 
 Taking a look at a cleaned up binary ninja decompilation, we see the token permissions checks (and can confirm that there are no PPL checks in place):
 
