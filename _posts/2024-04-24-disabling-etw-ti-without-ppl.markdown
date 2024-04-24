@@ -14,7 +14,7 @@ As RiskInsight already explained this in detail, I will not be explaining backgr
 1. [Exploitation Requirements](#exploitation-requirements)  
 2. [The Bug](#the-bug) 
 3. [Building A POC](#building-a-poc) 
-4. [Potential Detections](#potential-detections) 
+4. [Potential Detections](#potential-detections--preventions) 
 5. [References](#references) 
 
 # Exploitation Requirements
@@ -141,6 +141,6 @@ Important to note that regarding how practical these are, they are purely specul
 # References
 
 - [A universal EDR bypass built in Windows 10](https://www.riskinsight-wavestone.com/en/2023/10/a-universal-edr-bypass-built-in-windows-10/) - RiskInsight's blog post of which inspired me to build this POC. 
-- [SealighterTI](https://github.com/pathtofile/SealighterTI) - A tool to test the Thread-Intelligence ETW Provider 
+- [SealighterTI](https://github.com/pathtofile/SealighterTI) - A tool to test the Thread-Intelligence ETW Provider. 
 - [Tweet - First Seen Usage?](https://x.com/SBousseaden/status/1745022464965349628)
-- [NtDoc](https://ntdoc.m417z.com/)
+- [NtDoc](https://ntdoc.m417z.com/) - Handy reference for Windows NT.
