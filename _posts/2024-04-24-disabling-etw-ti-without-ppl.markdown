@@ -139,7 +139,7 @@ Important to note that regarding how practical these are, they are purely specul
 3. Lack of ETW-TI telemetry
     - Checking if a process is raising no events of a common event type e.g. `ReadVmLogging`. (Credit to [@bakki](https://twitter.com/shubakki))
 4. Update to Windows 11
-    - As this bug no longer exists on Windows 11, if migration is possible that I will always recommend this over alternatives. 
+    - As this bug no longer exists on Windows 11, if migration is possible I will always recommend this over alternatives. 
 
 # References
 
