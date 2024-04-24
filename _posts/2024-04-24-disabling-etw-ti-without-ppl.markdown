@@ -7,7 +7,7 @@ categories: DefenseEvasion Windows
 
 # Intro
 
-Back in October of 2023, RiskInsight published a blog post that caught my attention. The post explained [A universal EDR bypass built in Windows 10](https://www.riskinsight-wavestone.com/en/2023/10/a-universal-edr-bypass-built-in-windows-10/), detailed a "bug" that to disable ETW-TI logging for a given process from user mode **without** the expected PPL requirement.
+Back in October of 2023, RiskInsight published a blog post that caught my attention. The post explained [A universal EDR bypass built in Windows 10](https://www.riskinsight-wavestone.com/en/2023/10/a-universal-edr-bypass-built-in-windows-10/), detailed a "bug" that allows a user to disable logging of certain ETW-TI events for a given process from user mode **without** the expected PPL requirement.
 
 As RiskInsight already explained this in detail, I will not be explaining background on how ETW-TI works under the hood. I will simply be building upon their blog post, with the aim of showing how I went from their post to a functional POC. 
 
