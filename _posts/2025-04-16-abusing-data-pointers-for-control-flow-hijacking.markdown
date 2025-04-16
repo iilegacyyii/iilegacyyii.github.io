@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Abusing Data Pointers for Control Flow Hijacking"
+title: "Control Flow Hijacking via Data Pointers"
 date: 2025-04-16 10:00:00 +0100
 categories: DefenseEvasion Windows
 ---
