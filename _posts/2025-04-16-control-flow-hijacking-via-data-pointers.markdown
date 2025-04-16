@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Control Flow Hijacking via Data Pointers"
-date: 2025-04-16 09:00:00 +0000
+date: 2025-04-16 08:00:00 +0000
 categories: DefenseEvasion Windows
 ---
 
